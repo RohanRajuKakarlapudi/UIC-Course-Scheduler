@@ -247,7 +247,10 @@ index
       });
 
       let preview = () => {
-        let major = $("#Majors").val();
+        // let major = $("#Majors").val();
+        let major = $("#Majors option:selected").text().trim();
+
+
         let major_label = $('label[for="major"]').text();
         let major_data = '<p><strong>' + major_label + '</strong> : ' + major + '</p>';
 
@@ -264,118 +267,140 @@ index
         let balance_data = '<p><strong>' + balance_label + '</strong> : ' + balance + '</p>';
 
         let data = major_data + min_data + max_data + balance_data;
-        var chem_classes = ""; che_classes = ""; civi_classes = ""; compSci_classes = ""; elecComp_classes = ""; engl_classes = ""; engr_classes = ""; genEd_classes = ""; IE_classes = ""; math_classes = ""; mech_classes = ""; phys_classes = ""; stat_classes = "";
-        var chem_data = ""; che_data = ""; civi_data = ""; compSci_data = ""; elecComp_data = ""; engl_data = ""; engr_data = ""; genEd_data = ""; IE_data = ""; math_data = ""; phys_data = ""; stat_data = "";
-        var selectedClassData = document.getElementById('chosenClasses');
-        // looping through all selected classes
-          for (var i = 0; i < selectedClassData.options.length; i++) {
-            if (selectedClassData.options[i].text.substring(0,4) == "CHEM") {
-            chem_classes += selectedClassData.options[i].id;
-              chem_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 3) == "CHE") {
-              che_classes += selectedClassData.options[i].id;
-              che_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 3) == "CME") {
-              civi_classes += selectedClassData.options[i].id;
-              civi_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 2) == "CS") {
-              compSci_classes += selectedClassData.options[i].id;
-              compSci_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 3) == "ECE") {
-              elecComp_classes += selectedClassData.options[i].id;
-              elecComp_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGL") {
-              engl_classes += selectedClassData.options[i].id;
-              engl_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGR") {
-              engr_classes += selectedClassData.options[i].id;
-              engr_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "GEDU") {
-              genEd_classes += selectedClassData.options[i].id;
-              genEd_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 2) == "IE") {
-              IE_classes += selectedClassData.options[i].id;
-              IE_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "MATH") {
-              math_classes += selectedClassData.options[i].id;
-              math_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 2) == "ME") {
-              mech_classes += selectedClassData.options[i].id;
-              mech_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "PHYS") {
-              phys_classes += selectedClassData.options[i].id;
-              phys_classes += ", ";
-            } else if (selectedClassData.options[i].text.substring(0, 4) == "STAT") {
-              stat_classes += selectedClassData.options[i].id;
-              stat_classes += ", ";
-            }
+        // var chem_classes = ""; che_classes = ""; civi_classes = ""; compSci_classes = ""; elecComp_classes = ""; engl_classes = ""; engr_classes = ""; genEd_classes = ""; IE_classes = ""; math_classes = ""; mech_classes = ""; phys_classes = ""; stat_classes = "";
+        // var chem_data = ""; che_data = ""; civi_data = ""; compSci_data = ""; elecComp_data = ""; engl_data = ""; engr_data = ""; genEd_data = ""; IE_data = ""; math_data = ""; phys_data = ""; stat_data = "";
+        // var selectedClassData = document.getElementById('chosenClasses');
+        // // looping through all selected classes
+        //   for (var i = 0; i < selectedClassData.options.length; i++) {
+        //     if (selectedClassData.options[i].text.substring(0,4) == "CHEM") {
+        //     chem_classes += selectedClassData.options[i].id;
+        //       chem_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 3) == "CHE") {
+        //       che_classes += selectedClassData.options[i].id;
+        //       che_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 3) == "CME") {
+        //       civi_classes += selectedClassData.options[i].id;
+        //       civi_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 2) == "CS") {
+        //       compSci_classes += selectedClassData.options[i].id;
+        //       compSci_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 3) == "ECE") {
+        //       elecComp_classes += selectedClassData.options[i].id;
+        //       elecComp_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGL") {
+        //       engl_classes += selectedClassData.options[i].id;
+        //       engl_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGR") {
+        //       engr_classes += selectedClassData.options[i].id;
+        //       engr_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "GEDU") {
+        //       genEd_classes += selectedClassData.options[i].id;
+        //       genEd_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 2) == "IE") {
+        //       IE_classes += selectedClassData.options[i].id;
+        //       IE_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "MATH") {
+        //       math_classes += selectedClassData.options[i].id;
+        //       math_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 2) == "ME") {
+        //       mech_classes += selectedClassData.options[i].id;
+        //       mech_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "PHYS") {
+        //       phys_classes += selectedClassData.options[i].id;
+        //       phys_classes += ", ";
+        //     } else if (selectedClassData.options[i].text.substring(0, 4) == "STAT") {
+        //       stat_classes += selectedClassData.options[i].id;
+        //       stat_classes += ", ";
+        //     }
+        //   }
+
+        let selectedClassData = document.getElementById('chosenClasses');
+        let subjectMap = {};
+
+        for (let i = 0; i < selectedClassData.options.length; i++) {
+          let course = selectedClassData.options[i].textContent.trim();
+          let subject = course.split(" ")[0]; // First word (CS, MATH, etc.)
+
+          if (!subjectMap[subject]) {
+            subjectMap[subject] = [];
           }
+
+          subjectMap[subject].push(course);
+        }
+
+        for (let subject in subjectMap) {
+          let courseList = subjectMap[subject].join(", ");
+          data += `<p><strong>${subject}</strong> : ${courseList}</p>`;
+        }
+
+
+
           // checking if they are empty before adding/appending
-          if (chem_classes.length != 0) {
-            chem_classes = chem_classes.substr(0, chem_classes.length-2);
-            chem_data = '<p><strong>' + "Chemistry" + '</strong> : ' + chem_classes + '</p>';
-            data += chem_data;
-          }
-          if (che_classes.length != 0) {
-            che_classes = che_classes.substr(0, che_classes.length-2);
-            che_data = '<p><strong>' + "Chemical Engineering" + '</strong> : ' + che_classes + '</p>';
-            data += che_data;
-          }
-          if (civi_classes.length != 0) {
-            civi_classes = civi_classes.substr(0, civi_classes.length-2);
-            civi_data = '<p><strong>' + "Civil Engineering" + '</strong> : ' + civi_classes + '</p>';
-            data += civi_data;
-          }
-          if (compSci_classes.length != 0) {
-            compSci_classes = compSci_classes.substr(0, compSci_classes.length-2);
-            compSci_data = '<p><strong>' + "Computer Science" + '</strong> : ' + compSci_classes + '</p>';
-            data += compSci_data;
-          }
-          if (elecComp_classes.length != 0) {
-            elecComp_classes = elecComp_classes.substr(0, elecComp_classes.length-2);
-            elecComp_data = '<p><strong>' + "Electrical Computer Engineering" + '</strong> : ' + elecComp_classes + '</p>';
-            data += elecComp_data;
-          }
-          if (engl_classes.length != 0) {
-            engl_classes = engl_classes.substr(0, engl_classes.length-2);
-            engl_data = '<p><strong>' + "English" + '</strong> : ' + engl_classes + '</p>';
-            data += engl_data;
-          }
-          if (engr_classes.length != 0) {
-            engr_classes = engr_classes.substr(0, engr_classes.length-2);
-            engr_data = '<p><strong>' + "Engineering" + '</strong> : ' + engr_classes + '</p>';
-            data += engr_data;
-          }
-          if (genEd_classes.length != 0) {
-            genEd_classes = genEd_classes.substr(0, genEd_classes.length-2);
-            genEd_data = '<p><strong>' + "General Ed" + '</strong> : ' + genEd_classes + '</p>';
-            data += genEd_data;
-          }
-          if (IE_classes.length != 0) {
-            IE_classes = IE_classes.substr(0, IE_classes.length-2);
-            IE_data = '<p><strong>' + "Industrial Engineering" + '</strong> : ' + IE_classes + '</p>';
-            data += IE_data;
-          }
-          if (math_classes.length != 0) {
-            math_classes = math_classes.substr(0, math_classes.length-2);
-            math_data = '<p><strong>' + "Math" + '</strong> : ' + math_classes + '</p>';
-            data += math_data;
-          }
-          if (mech_classes.length != 0) {
-            mech_classes = mech_classes.substr(0, mech_classes.length-2);
-            mech_data = '<p><strong>' + "Mechanical Engineering" + '</strong> : ' + mech_classes + '</p>';
-            data += mech_data;
-          }
-          if (phys_classes.length != 0) {
-            phys_classes = phys_classes.substr(0, phys_classes.length-2);
-            phys_data = '<p><strong>' + "Physics" + '</strong> : ' + phys_classes + '</p>';
-            data += phys_data;
-          }
-          if (stat_classes.length != 0) {
-            stat_classes = stat_classes.substr(0, stat_classes.length-2);
-            stat_data = '<p><strong>' + "Statistics" + '</strong> : ' + stat_classes + '</p>';
-            data += stat_data;
-          }
+          // if (chem_classes.length != 0) {
+          //   chem_classes = chem_classes.substr(0, chem_classes.length-2);
+          //   chem_data = '<p><strong>' + "Chemistry" + '</strong> : ' + chem_classes + '</p>';
+          //   data += chem_data;
+          // }
+          // if (che_classes.length != 0) {
+          //   che_classes = che_classes.substr(0, che_classes.length-2);
+          //   che_data = '<p><strong>' + "Chemical Engineering" + '</strong> : ' + che_classes + '</p>';
+          //   data += che_data;
+          // }
+          // if (civi_classes.length != 0) {
+          //   civi_classes = civi_classes.substr(0, civi_classes.length-2);
+          //   civi_data = '<p><strong>' + "Civil Engineering" + '</strong> : ' + civi_classes + '</p>';
+          //   data += civi_data;
+          // }
+          // if (compSci_classes.length != 0) {
+          //   compSci_classes = compSci_classes.substr(0, compSci_classes.length-2);
+          //   compSci_data = '<p><strong>' + "Computer Science" + '</strong> : ' + compSci_classes + '</p>';
+          //   data += compSci_data;
+          // }
+          // if (elecComp_classes.length != 0) {
+          //   elecComp_classes = elecComp_classes.substr(0, elecComp_classes.length-2);
+          //   elecComp_data = '<p><strong>' + "Electrical Computer Engineering" + '</strong> : ' + elecComp_classes + '</p>';
+          //   data += elecComp_data;
+          // }
+          // if (engl_classes.length != 0) {
+          //   engl_classes = engl_classes.substr(0, engl_classes.length-2);
+          //   engl_data = '<p><strong>' + "English" + '</strong> : ' + engl_classes + '</p>';
+          //   data += engl_data;
+          // }
+          // if (engr_classes.length != 0) {
+          //   engr_classes = engr_classes.substr(0, engr_classes.length-2);
+          //   engr_data = '<p><strong>' + "Engineering" + '</strong> : ' + engr_classes + '</p>';
+          //   data += engr_data;
+          // }
+          // if (genEd_classes.length != 0) {
+          //   genEd_classes = genEd_classes.substr(0, genEd_classes.length-2);
+          //   genEd_data = '<p><strong>' + "General Ed" + '</strong> : ' + genEd_classes + '</p>';
+          //   data += genEd_data;
+          // }
+          // if (IE_classes.length != 0) {
+          //   IE_classes = IE_classes.substr(0, IE_classes.length-2);
+          //   IE_data = '<p><strong>' + "Industrial Engineering" + '</strong> : ' + IE_classes + '</p>';
+          //   data += IE_data;
+          // }
+          // if (math_classes.length != 0) {
+          //   math_classes = math_classes.substr(0, math_classes.length-2);
+          //   math_data = '<p><strong>' + "Math" + '</strong> : ' + math_classes + '</p>';
+          //   data += math_data;
+          // }
+          // if (mech_classes.length != 0) {
+          //   mech_classes = mech_classes.substr(0, mech_classes.length-2);
+          //   mech_data = '<p><strong>' + "Mechanical Engineering" + '</strong> : ' + mech_classes + '</p>';
+          //   data += mech_data;
+          // }
+          // if (phys_classes.length != 0) {
+          //   phys_classes = phys_classes.substr(0, phys_classes.length-2);
+          //   phys_data = '<p><strong>' + "Physics" + '</strong> : ' + phys_classes + '</p>';
+          //   data += phys_data;
+          // }
+          // if (stat_classes.length != 0) {
+          //   stat_classes = stat_classes.substr(0, stat_classes.length-2);
+          //   stat_data = '<p><strong>' + "Statistics" + '</strong> : ' + stat_classes + '</p>';
+          //   data += stat_data;
+          // }
         $('#preview_data').css("font-size", 16 + "px");
         $('#preview_data').html('');
         $('#preview_data').append(data);
