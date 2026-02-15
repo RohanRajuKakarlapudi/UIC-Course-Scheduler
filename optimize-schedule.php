@@ -23,8 +23,14 @@
 	}
 	?>
 <?php
-session_start();
-$inputFileName ="input_".(string)$_POST['inputFile'].".txt";
+// session_start();
+// $inputFileName ="input_".(string)$_POST['inputFile'].".txt";
+
+// Generate unique job ID for this execution
+$sessionName = time() . "_" . bin2hex(random_bytes(8));
+
+$inputFileName = "input_" . $sessionName . ".txt";
+
 $file = fopen($inputFileName, "w"); // this should create the new file
 
 // $major = $_POST['major'];
@@ -88,16 +94,23 @@ $fh2 = fopen( 'output_2.txt', 'w' );
 fclose($fh2);
 */
 // output files are declared early so I have something to pass into the schedule generator
-$outputFileName1 = "output_".$_POST['inputFile']."_1.txt";  // output 1
-$outputFileName2 = "output_".$_POST['inputFile']."_2.txt"; // output 2
-$outputFileName3 = "output_".$_POST['inputFile']."_3.txt"; // output 3
-$outputFileName4 = "output_".$_POST['inputFile']."_4.txt"; // output 4
+// $outputFileName1 = "output_".$_POST['inputFile']."_1.txt";  // output 1
+// $outputFileName2 = "output_".$_POST['inputFile']."_2.txt"; // output 2
+// $outputFileName3 = "output_".$_POST['inputFile']."_3.txt"; // output 3
+// $outputFileName4 = "output_".$_POST['inputFile']."_4.txt"; // output 4
 
-$sessionName = $_POST['inputFile'];
+// $sessionName = $_POST['inputFile'];
+
+
+$outputFileName1 = "output_" . $sessionName . "_1.txt";
+$outputFileName2 = "output_" . $sessionName . "_2.txt";
+$outputFileName3 = "output_" . $sessionName . "_3.txt";
+$outputFileName4 = "output_" . $sessionName . "_4.txt";
 session_write_close();
 
-exec("./schedule_05 $sessionName", $out);  // passes the input filename, output1, and output2 to ArgV
+// exec("./schedule_05 $sessionName", $out);  // passes the input filename, output1, and output2 to ArgV
 
+exec("./schedule_05 " . escapeshellarg($sessionName), $out);
 
 //------- Output_1.txt -----
 $file = fopen($outputFileName1, "r");
@@ -377,10 +390,16 @@ if ($searchtxt == "TIME" || $searchtxt == '' || $searchtxt != "Major" )
 };
 changeDivBoxSize($numSemesters * 100);
 // unlink all files that have been generated
-$mastercourseFileName = "mastercourse_gen_".(string)$_POST['inputFile'].".txt";
-$courseOfferingsFileName = "courseofferings_gen_".(string)$_POST['inputFile'].".txt";
-$prerequisitesFileName = "prerequisites_gen_".(string)$_POST['inputFile'].".txt";
-$mastercourselistFileName= "mastercourselist_gen_".(string)$_POST['inputFile'].".txt";
+// $mastercourseFileName = "mastercourse_gen_".(string)$_POST['inputFile'].".txt";
+// $courseOfferingsFileName = "courseofferings_gen_".(string)$_POST['inputFile'].".txt";
+// $prerequisitesFileName = "prerequisites_gen_".(string)$_POST['inputFile'].".txt";
+// $mastercourselistFileName= "mastercourselist_gen_".(string)$_POST['inputFile'].".txt";
+
+$mastercourseFileName = "mastercourse_gen_" . $sessionName . ".txt";
+$courseOfferingsFileName = "courseofferings_gen_" . $sessionName . ".txt";
+$prerequisitesFileName = "prerequisites_gen_" . $sessionName . ".txt";
+$mastercourselistFileName = "mastercourselist_gen_" . $sessionName . ".txt";
+
 unlink($inputFileName);
 unlink($outputFileName1);
 unlink($outputFileName2);
