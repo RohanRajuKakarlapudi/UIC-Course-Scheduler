@@ -1,0 +1,11 @@
+# Temp input/output files
+input_*.txt
+output_*.txt
+*_gen_*.txt
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Optional compiled binary
+schedule_05

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Schedule Optimizer</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="/public/javascripts/script.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="jquery-ui.min.css">
+    <style>
+      #loadImg{position:absolute;z-index:999;}
+      #loadImg div{display:table-cell;width:300px;height:120px;background:transparent;text-align:center;vertical-align:middle;}
+
+      </style>
+      <style>
+        .myTable {
+            border-collapse: collapse;
+            background-color: white;
+        }
+        .myTable tbody th:nth-of-type(even){
+            background-color: #f3f3f3;
+            
+        }
+    </style>
+      <style>
+			body {
+ 			background-image: url('bc2.jpg');
+  			background-repeat: no-repeat;
+  			background-attachment: fixed;  
+  			background-size: cover;
+        text-align: left;
+        font-size: 16px;
+        font-family: Arial;
+			}
+      .ui-button.ui-widget{
+         font-size: 16px;
+  } 
+	  </style>
+    <script>
+      var sessionID = Math.floor(Math.random() * 1000000);
+      var divBoxSize = 1000;
+    </script>
+      <script>
+        function show_image(src, width, height, alt) {
+            var img = document.createElement("img");
+            img.src = src;
+            img.width = width;
+            img.height = height;
+            img.alt = alt;
+            document.body.appendChild(img);
+}
+      </script>
+      <script>
+            function insertValue(where, val)
+            {
+                var select = document.getElementById(where),
+                    newOption = document.createElement("OPTION"),
+                    newOptionVal = document.createTextNode(val);
+                    newOptionVal2 = document.createAttribute("value");
+                    newOptionVal3 = document.createAttribute("id");
+                    newOptionVal4 = document.createAttribute("name");
+                    var val_name_adjusted = val;
+                    /*
+                    if (val_name_adjusted[2] == " ") {  // course is 2 char long
+                      val_name_adjusted = val_name_adjusted.substr(0, 2) + " " + " " + val_name_adjusted.substr(2);
+                    } else if (val_name_adjusted[3] == " ") {
+                      val_name_adjusted = val_name_adjusted.substr(0, 3) + " " + val_name_adjusted.substr(3);
+                    }
+                    */
+                    newOptionVal4.value = val_name_adjusted;
+                    newOptionVal2.value = val_name_adjusted;
+                    newOptionVal3.value = val_name_adjusted;
+
+                newOption.appendChild(newOptionVal);
+                newOption.setAttributeNode(newOptionVal2);
+                newOption.setAttributeNode(newOptionVal3);
+                newOption.setAttributeNode(newOptionVal4);
+                select.insertBefore(newOption,select.lastChild);
+            }
+            function addClasses(filePath, selectType) {
+                jQuery.get(filePath, function(data){
+                var fileText = data.split("\n");
+                for (var i = fileText.length-1; i >= 0; i--) {
+                  insertValue(selectType, fileText[i]);
+                }
+              });
+            }
+            function addClassesToAddBox(val) {
+              console.log("Adding Classes:",val);
+              for (var i = 0; i < val.length; i++) {
+                if (val[i] != "") {  // checking to see if it is null before inserting value
+                  insertValue('chosenClasses', document.getElementById(val[i]).getAttribute("name"));
+                }
+              }
+            }
+            function removeClassesFromAddBox(val) {
+              console.log("Removing Classes:", val);
+              for (var i = 0; i < val.length; i++) {
+                var classesToDelete = document.getElementById(val[i]);
+                classesToDelete.remove();
+              }
+            }
+            function parseCreditHours(raw) {
+              if (!raw) return [];
+              let s = String(raw).trim();
+
+              // normalize "to" -> "-"
+              s = s.replace(/\s+to\s+/gi, "-");
+
+              // comma list: "2,3,4"
+              if (s.includes(",")) {
+                return s.split(",").map(x => x.trim()).filter(Boolean);
+              }
+
+              // range: "1 - 3" or "1-3"
+              const rangeMatch = s.match(/^(\d+)\s*-\s*(\d+)$/);
+              if (rangeMatch) {
+                const a = parseInt(rangeMatch[1], 10);
+                const b = parseInt(rangeMatch[2], 10);
+                if (!Number.isNaN(a) && !Number.isNaN(b) && a <= b) {
+                  const out = [];
+                  for (let k = a; k <= b; k++) out.push(String(k));
+                  return out;
+                }
+              }
+
+              // single number: "3"
+              if (/^\d+$/.test(s)) return [s];
+
+              // fallback
+              return [s];
+            }
+
+            function populateCreditDropdown(rawCreditHours) {
+              const credits = parseCreditHours(rawCreditHours);
+              let html = '<option value="">Select Credit Hours</option>';
+
+              credits.forEach(c => {
+                html += '<option value="' + c + '">' + c + '</option>';
+              });
+
+              $("#CreditHours").html(html);
+
+              // fixed credit: auto select
+              if (credits.length === 1) {
+                $("#CreditHours").val(credits[0]);
+              }
+            }
+
+            // function addSelectedCourseWithCredits() {
+            //   const courseOpt = $("#Courses option:selected");
+            //   const courseId = $("#Courses").val();
+            //   const courseName = courseOpt.attr("name") || courseOpt.text();
+            //   const credits = $("#CreditHours").val();
+
+            //   if (!courseId) {
+            //     alert("Please select a course.");
+            //     return;
+            //   }
+            //   if (!credits) {
+            //     alert("Please select credit hours.");
+            //     return;
+            //   }
+
+            //   // store exactly what the professor wants: course + chosen credit
+            //   const combined = courseName + " | Credit Hours: " + credits;
+
+            //   // prevent duplicates
+            //   const chosen = document.getElementById("chosenClasses");
+            //   for (let i = 0; i < chosen.options.length; i++) {
+            //     if (chosen.options[i].text === combined) return;
+            //   }
+
+            //   insertValue("chosenClasses", combined);
+            // }
+            function addSelectedCourseWithCredits() {
+              const courseOpt = $("#Courses option:selected");
+              const courseId = $("#Courses").val();
+              const courseName = (courseOpt.attr("name") || courseOpt.text() || "").trim();
+              const credits = ($("#CreditHours").val() || "").trim();
+
+              if (!courseId) { alert("Please select a course."); return; }
+              if (!credits) { alert("Please select credit hours."); return; }
+
+              const combined = `${courseName} | Credit Hours: ${credits}`;
+              const chosen = document.getElementById("chosenClasses");
+
+              // block exact duplicates (same course + same credits)
+              for (let i = 0; i < chosen.options.length; i++) {
+                const existing = (chosen.options[i].textContent || chosen.options[i].innerText || "").trim();
+                if (existing === combined) return; // already exists
+              }
+
+              // add new option
+              const opt = document.createElement("option");
+              opt.textContent = combined;
+              opt.value = combined;
+              opt.id = combined;
+              opt.name = combined;
+              chosen.appendChild(opt);
+            }
+
+
+      </script>
+    <script>
+      $( function() {
+        $('#submit').on('click', function(e) {
+            e.preventDefault();
+            preview();
+        });
+      });
+
+      let preview = () => {
+        let major = $("#Majors").val();
+        let major_label = $('label[for="major"]').text();
+        let major_data = '<p><strong>' + major_label + '</strong> : ' + major + '</p>';
+
+        let minHours = $('input[name="min-hours"]').val();
+        let min_label = $('label[for="min-hours"]').text();
+        let min_data = '<p><strong>' + min_label + '</strong> : ' + minHours + '</p>';
+
+        let maxHours = $('input[name="max-hours"]').val();
+        let max_label = $('label[for="max-hours"]').text();
+        let max_data = '<p><strong>' + max_label + '</strong> : ' + maxHours + '</p>';
+
+        let balance = $('input[name="balance"]').val();
+        let balance_label = $('label[for="balance"]').text();
+        let balance_data = '<p><strong>' + balance_label + '</strong> : ' + balance + '</p>';
+
+        let data = major_data + min_data + max_data + balance_data;
+        var chem_classes = ""; che_classes = ""; civi_classes = ""; compSci_classes = ""; elecComp_classes = ""; engl_classes = ""; engr_classes = ""; genEd_classes = ""; IE_classes = ""; math_classes = ""; mech_classes = ""; phys_classes = ""; stat_classes = "";
+        var chem_data = ""; che_data = ""; civi_data = ""; compSci_data = ""; elecComp_data = ""; engl_data = ""; engr_data = ""; genEd_data = ""; IE_data = ""; math_data = ""; phys_data = ""; stat_data = "";
+        var selectedClassData = document.getElementById('chosenClasses');
+        // looping through all selected classes
+          for (var i = 0; i < selectedClassData.options.length; i++) {
+            if (selectedClassData.options[i].text.substring(0,4) == "CHEM") {
+            chem_classes += selectedClassData.options[i].id;
+              chem_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 3) == "CHE") {
+              che_classes += selectedClassData.options[i].id;
+              che_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 3) == "CME") {
+              civi_classes += selectedClassData.options[i].id;
+              civi_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 2) == "CS") {
+              compSci_classes += selectedClassData.options[i].id;
+              compSci_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 3) == "ECE") {
+              elecComp_classes += selectedClassData.options[i].id;
+              elecComp_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGL") {
+              engl_classes += selectedClassData.options[i].id;
+              engl_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "ENGR") {
+              engr_classes += selectedClassData.options[i].id;
+              engr_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "GEDU") {
+              genEd_classes += selectedClassData.options[i].id;
+              genEd_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 2) == "IE") {
+              IE_classes += selectedClassData.options[i].id;
+              IE_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "MATH") {
+              math_classes += selectedClassData.options[i].id;
+              math_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 2) == "ME") {
+              mech_classes += selectedClassData.options[i].id;
+              mech_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "PHYS") {
+              phys_classes += selectedClassData.options[i].id;
+              phys_classes += ", ";
+            } else if (selectedClassData.options[i].text.substring(0, 4) == "STAT") {
+              stat_classes += selectedClassData.options[i].id;
+              stat_classes += ", ";
+            }
+          }
+          // checking if they are empty before adding/appending
+          if (chem_classes.length != 0) {
+            chem_classes = chem_classes.substr(0, chem_classes.length-2);
+            chem_data = '<p><strong>' + "Chemistry" + '</strong> : ' + chem_classes + '</p>';
+            data += chem_data;
+          }
+          if (che_classes.length != 0) {
+            che_classes = che_classes.substr(0, che_classes.length-2);
+            che_data = '<p><strong>' + "Chemical Engineering" + '</strong> : ' + che_classes + '</p>';
+            data += che_data;
+          }
+          if (civi_classes.length != 0) {
+            civi_classes = civi_classes.substr(0, civi_classes.length-2);
+            civi_data = '<p><strong>' + "Civil Engineering" + '</strong> : ' + civi_classes + '</p>';
+            data += civi_data;
+          }
+          if (compSci_classes.length != 0) {
+            compSci_classes = compSci_classes.substr(0, compSci_classes.length-2);
+            compSci_data = '<p><strong>' + "Computer Science" + '</strong> : ' + compSci_classes + '</p>';
+            data += compSci_data;
+          }
+          if (elecComp_classes.length != 0) {
+            elecComp_classes = elecComp_classes.substr(0, elecComp_classes.length-2);
+            elecComp_data = '<p><strong>' + "Electrical Computer Engineering" + '</strong> : ' + elecComp_classes + '</p>';
+            data += elecComp_data;
+          }
+          if (engl_classes.length != 0) {
+            engl_classes = engl_classes.substr(0, engl_classes.length-2);
+            engl_data = '<p><strong>' + "English" + '</strong> : ' + engl_classes + '</p>';
+            data += engl_data;
+          }
+          if (engr_classes.length != 0) {
+            engr_classes = engr_classes.substr(0, engr_classes.length-2);
+            engr_data = '<p><strong>' + "Engineering" + '</strong> : ' + engr_classes + '</p>';
+            data += engr_data;
+          }
+          if (genEd_classes.length != 0) {
+            genEd_classes = genEd_classes.substr(0, genEd_classes.length-2);
+            genEd_data = '<p><strong>' + "General Ed" + '</strong> : ' + genEd_classes + '</p>';
+            data += genEd_data;
+          }
+          if (IE_classes.length != 0) {
+            IE_classes = IE_classes.substr(0, IE_classes.length-2);
+            IE_data = '<p><strong>' + "Industrial Engineering" + '</strong> : ' + IE_classes + '</p>';
+            data += IE_data;
+          }
+          if (math_classes.length != 0) {
+            math_classes = math_classes.substr(0, math_classes.length-2);
+            math_data = '<p><strong>' + "Math" + '</strong> : ' + math_classes + '</p>';
+            data += math_data;
+          }
+          if (mech_classes.length != 0) {
+            mech_classes = mech_classes.substr(0, mech_classes.length-2);
+            mech_data = '<p><strong>' + "Mechanical Engineering" + '</strong> : ' + mech_classes + '</p>';
+            data += mech_data;
+          }
+          if (phys_classes.length != 0) {
+            phys_classes = phys_classes.substr(0, phys_classes.length-2);
+            phys_data = '<p><strong>' + "Physics" + '</strong> : ' + phys_classes + '</p>';
+            data += phys_data;
+          }
+          if (stat_classes.length != 0) {
+            stat_classes = stat_classes.substr(0, stat_classes.length-2);
+            stat_data = '<p><strong>' + "Statistics" + '</strong> : ' + stat_classes + '</p>';
+            data += stat_data;
+          }
+        $('#preview_data').css("font-size", 16 + "px");
+        $('#preview_data').html('');
+        $('#preview_data').append(data);
+        $('#preview_data').dialog({
+            resizable: false,
+            modal: true,
+            buttons: {
+                'Submit': function() {
+                    //submit the form
+                    // select all options so we can send the form properly
+                    for (var i = 0; i < document.getElementById('chosenClasses').options.length; i++) {
+                      document.getElementById('chosenClasses').options[i].selected = true;
+                    }
+                    document.getElementById('loadImg').style.display = "block";
+                    document.getElementById('loadText').style.display = "block";
+                    $("form[name='form']").submit();
+                    $(this).dialog("close");
+                },
+                Cancel: function() {
+                    $(this).dialog("close");
+                }
+            }
+        }).css("font-size", "16px");
+        $('#reset').click(function() {
+          location.reload();
+        });
+      }
+    </script>
+
+  </head>
+  <body style="position:relative;">
+    <div class="options" style="display:inline-block;vertical-align:top;">
+      <h1 style="text-align:center;">Schedule Optimizer</h1>
+      
+      <label for = "EnterInfo" style="margin-left: 50px; font-size: 16px;">Enter your information below:</label>
+        <br></br>
+      <form action="optimize-schedule.php" method="post" target="content" name="form">
+        <p style="margin-left: 50px">
+          <label for="inputFile">Session Name</label>
+          <input type = "hidden" id = "inputFile" name="inputFile" value = ""/>
+            <script>
+              
+              document.getElementById("inputFile").value = sessionID;
+            </script>
+        <label for="major">Major</label>
+        <select name="major" id="Majors" class="form-control input-lg" style = "font-size: 16px; width: 350px">
+            <option value="">Select Major</option>
+        </select>
+        <br>
+
+        <label for="min-hours" >Minimum Hours &nbsp;&nbsp; </label>&nbsp;<input name="min-hours" style = "width: 150px" data-validate="number" placeholder="0" required size="5"class="form-control input-lg" >
+        <br>
+
+        <label for="max-hours" >Maxiumum Hours</label>
+        <input name="max-hours" style = "width: 150px" data-validate="number" placeholder="0" required size="5" class="form-control input-lg">
+        <br>
+ 
+        <label for="balance">  Balance  &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </label><input style = "width: 150px" name="balance" data-validate="number" placeholder="0" required size="5" class="form-control input-lg">
+        <br>
+        <div class="container" style="width:600px;" style="font-size: 16px;">
+        <label for="classes" name="classes-dropdowns" style="margin-left: 35px">Please select subject to add class</label>
+        <select name="classes" id = "Subjects" class="form-control input-lg" style="margin-left: 35px; font-size: 16px; width: 300px">
+          <option value="">Select Subject</option>
+        </select>
+        <br>
+        <!-- <select name = "classChoices" id = "Courses" class="form-control input-lg" multiple="multiple" style="margin-left: 35px;font-size: 16px; width: 250px">
+          <option value="">Select Courses</option>
+          </select> -->
+        <select name="classChoice" id="Courses" class="form-control input-lg" style="margin-left: 35px; font-size: 16px; width: 300px">
+            <option value="">Select Course</option>
+          </select>
+
+          <br>
+
+          <label style="margin-left: 35px">Credit Hours</label>
+          <select name="creditHours" id="CreditHours" class="form-control input-lg"
+                  style="margin-left: 35px; font-size: 16px; width: 200px">
+            <option value="">Select Credit Hours</option>
+          </select>
+        </div>
+        <div class="addBox" style="margin-left: 50px; font-size: 16px;">
+          <br>
+          <label for = "chosenClasses">Selected Classes Below:</label>
+          <br>
+          <!-- <button type = "button" onclick = "addClassesToAddBox($('#Courses').val())"> Add Class </button> -->
+           <button type="button" onclick="addSelectedCourseWithCredits()"> Add Class </button>
+
+          <button type = "button" onclick = "removeClassesFromAddBox($('#chosenClasses').val())"> Remove Class </button>
+          <select name="chosenClasses[]" id="chosenClasses" class="form-control input-lg"
+                  multiple="multiple" size="8"
+                  style="font-size: 16px; width: 320px;">
+          </select>
+            </div>
+        <br>
+        </p>
+        <div id="preview_data" title = " Preview Form Data" style = "font-size: 16px;">
+        <p style="margin-left: 50px;font-size: 16px;">
+
+        </div>
+      </form>
+      <p style="margin-left: 150px;">
+      <script>
+        let execute = () => {
+          $("#test").contents().find("#myTable").remove();
+          document.getElementById("loadText").style = "display:none; margin-left: 50px"
+        }
+      </script>
+      <input type="submit" name="submit" id="submit" onclick="execute()" value="Preview Classes"/>
+      <input type="reset" name="reset" value="Reset" id="reset"/>
+
+    </div>
+    <div>
+      <p id = "loadText" style = "display:none; margin-left: 50px"> We are working on the schedule, which could take up to 2 minutes. When it's finished, the schedule will be generated below:</p>
+    </div>
+    <div>
+      <div id="loadImg" style="position: relative;"><div><img src="./loader.gif" /></div></div>
+      <iframe id = "test" name=content width= "1000" height="1000" onload="document.getElementById('loadImg').style.display='none';" style="border:none;display:inline-block;" ></iframe>
+    </div>
+    
+  </body>
+</html>
+<script>
+  $(document).ready(function(){
+    load_json_data("Majors", -999);
+    load_json_data('Subjects');
+    console.log("loading Subjects...");
+    function load_json_data(id, parent_id) {
+      console.log("loading json data... id:", id, " parent_id: ", parent_id);
+      var dynamic_html_code = '';  // the html code that we are going to append later
+      // $.getJSON('class_listing.json', function(data) {  // get data from class_listing.json
+      $.getJSON('class_listing.php', function(data) {
+  
+      dynamic_html_code += '<option value = "">Select ' + id + '</option>';
+        $.each(data, function(key, value){
+          if (id == 'Subjects') {  // what we are looking at is a subject
+            // if (value.parent_id == '0') {
+            if (value.parent_id === null) {
+
+              var val_name_adjusted = value.name;
+              if (val_name_adjusted[2] == " ") {  // course is 2 char long
+                val_name_adjusted = val_name_adjusted.substr(0, 2) + " " + " " + val_name_adjusted.substr(2);
+              } else if (val_name_adjusted[3] == " ") {
+                val_name_adjusted = val_name_adjusted.substr(0, 3) + " " + val_name_adjusted.substr(3);
+              }
+              dynamic_html_code += '<option value="' + value.id + '"' + 'id="'+ value.id + '"' + 'name="'+ val_name_adjusted + '"' +'>' + val_name_adjusted + '</option>';
+            }
+          } else {  // this means that it is a course that has been looked at
+            if (value.parent_id == parent_id && value.parent_id != -999) {   
+              var val_name_adjusted = value.name;
+              if (val_name_adjusted[2] == " ") {  // course is 2 char long
+                val_name_adjusted = val_name_adjusted.substr(0, 2) + " " + " " + val_name_adjusted.substr(2);
+              } else if (val_name_adjusted[3] == " ") {
+                val_name_adjusted = val_name_adjusted.substr(0, 3) +  " " + val_name_adjusted.substr(3);
+              }
+              // dynamic_html_code += '<option value="' + value.id + '"' + 'id="'+ value.id + '"' + 'name="'+ val_name_adjusted + '"' +'>' + val_name_adjusted + " | Credit Hours: " + value.credit_hours +'</option>';
+              dynamic_html_code +=
+              '<option value="' + value.id + '"' +
+              ' id="' + value.id + '"' +
+              ' name="' + val_name_adjusted + '"' +
+              ' data-credit-hours="' + value.credit_hours + '"' +
+              '>' + val_name_adjusted + '</option>';
+
+            } else if (value.parent_id == "-999" && id == "Majors") {  // looking at a major
+              dynamic_html_code += '<option value="' + value.id + '"' + 'id="'+ value.id + '"' + 'name="'+ value.name + '"' +'>' + value.name + '</option>';
+            }
+          }
+        });
+        $('#' + id).html(dynamic_html_code);
+      });
+    }
+    // $(document).on('change', '#Subjects', function(){
+    //   var subject_id = jQuery(this).val();
+    //   if (subject_id != '') {
+    //     load_json_data('Courses', subject_id);
+    //   } else {
+    //     $('#Courses').html('<option value ="">Select Courses</option>');
+    //   }
+    // });
+    $(document).on('change', '#Subjects', function(){
+      var subject_id = jQuery(this).val();
+
+      if (subject_id != '') {
+        load_json_data('Courses', subject_id);
+        $('#CreditHours').html('<option value ="">Select Credit Hours</option>');
+      } else {
+        $('#Courses').html('<option value ="">Select Course</option>');
+        $('#CreditHours').html('<option value ="">Select Credit Hours</option>');
+      }
+    });
+
+    $(document).on('change', '#Courses', function(){
+      const selected = $("#Courses option:selected");
+      const rawCredits = selected.data("credit-hours");
+      populateCreditDropdown(rawCredits);
+    });
+    $("#chosenClasses").resizable({
+      handles: "se",           // bottom right corner only
+      minHeight: 120,
+      minWidth: 200
+    });
+
+
+  });
+  
+  </script>
