@@ -125,11 +125,11 @@ VIEWING THE APP IN BROWSER
 
 Open browser and go to:
 
-    http://localhost/UI-W-Migrated/index.html
+    http://localhost/UPDATED%20UI%20FINAL/UI_UPDATE/index.html
 
 OR directly inspect the JSON output:
 
-    http://localhost/UI-W-Migrated/class_listing.php
+    http://localhost/UPDATED%20UI%20FINAL/UI_UPDATE/class_listing.php
 
 If this URL returns JSON → everything is wired correctly.
 
