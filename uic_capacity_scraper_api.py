@@ -1,97 +1,90 @@
 import requests
 import pandas as pd
-import sqlite3
 import time
 
 BASE_URL = "https://banner.apps.uillinois.edu/StudentRegistrationSSB/ssb/searchResults/searchResults"
 
 TERM = "220268"
-
-UNIQUE_SESSION = "0cuvg1773206331164"
+PAGE_SIZE = 50
 
 headers = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
-    "User-Agent": "Mozilla/5.0",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Connection": "keep-alive",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
     "X-Requested-With": "XMLHttpRequest",
-    "X-Synchronizer-Token": "499e9754-36d2-429c-8f24-a0b37e14be95"
+    "X-Synchronizer-Token": "6ac689e0-cf8d-4f03-a88d-138935860787",
+    "ADRUM": "isAjax:true",
+    "Referer": "https://banner.apps.uillinois.edu/StudentRegistrationSSB/ssb/classSearch/classSearch"
 }
 
 cookies = {
-    "JSESSIONID": "DC8DB6CAF9D2ED99416021842B21F739.server5"
+    "JSESSIONID": "ED817FF09F5CD666E8E5CE8DD19FB6CC.server9",
+    "ADRUM": "s~1773251564727&r~aHR0cHMlM0ElMkYlMkZiYW5uZXIuYXBwcy51aWxsaW5vaXMuZWR1JTJGU3R1ZGVudFJlZ2lzdHJhdGlvblNTQiUyRnNzYiUyRmNsYXNzU2VhcmNoJTJGY2xhc3NTZWFyY2g="
 }
 
-# ---------------------------------
-# Load subject codes from your DB
-# ---------------------------------
-
-conn = sqlite3.connect("courses.db")
-
-subjects = pd.read_sql_query(
-    "SELECT subject_code FROM subjects",
-    conn
-)["subject_code"].tolist()
-
-print("Subjects loaded:", len(subjects))
-
-
 rows = []
+offset = 0
 
+print("Starting full catalog scrape...")
 
-# ---------------------------------
-# Scrape each subject
-# ---------------------------------
-
-for subject in subjects:
-
-    print("Scraping:", subject)
+while True:
 
     params = {
-        "txt_subject": subject,
         "txt_term": TERM,
         "startDatepicker": "",
         "endDatepicker": "",
-        "uniqueSessionId": UNIQUE_SESSION,
-        "pageOffset": 0,
-        "pageMaxSize": 500,
+        "uniqueSessionId": "aszik1773250102609",
+        "pageOffset": offset,
+        "pageMaxSize": PAGE_SIZE,
         "sortColumn": "subjectDescription",
-        "sortDirection": "asc"
+        "sortDirection": "asc",
+        "_": int(time.time()*1000)
     }
 
-    try:
+    r = requests.get(
+        BASE_URL,
+        headers=headers,
+        cookies=cookies,
+        params=params,
+        timeout=20
+    )
 
-        r = requests.get(
-            BASE_URL,
-            headers=headers,
-            cookies=cookies,
-            params=params
-        )
+    if r.status_code != 200:
+        print("HTTP error:", r.status_code)
+        break
 
-        data = r.json()["data"]
+    data = r.json()["data"]
 
-        for c in data:
+    print(f"offset {offset} -> {len(data)} rows")
 
-            capacity = c.get("maximumEnrollment")
-            remaining = c.get("seatsAvailable")
+    if len(data) == 0:
+        break
 
-            rows.append({
-                "subject": c.get("subject"),
-                "course_number": c.get("courseNumber"),
-                "title": c.get("courseTitle"),
-                "crn": c.get("courseReferenceNumber"),
-                "capacity": capacity,
-                "remaining_seats": remaining,
-                "enrolled": capacity - remaining if capacity and remaining else None
-            })
+    for c in data:
 
-    except Exception as e:
-        print("Failed:", subject)
+        capacity = c.get("maximumEnrollment")
+        remaining = c.get("seatsAvailable")
 
-    time.sleep(0.15)
+        rows.append({
+            "subject": c.get("subject"),
+            "course_number": c.get("courseNumber"),
+            "title": c.get("courseTitle"),
+            "crn": c.get("courseReferenceNumber"),
+            "capacity": capacity,
+            "remaining_seats": remaining,
+            "enrolled": capacity - remaining if capacity and remaining else None
+        })
 
+    offset += PAGE_SIZE
+
+    time.sleep(0.2)
 
 df = pd.DataFrame(rows)
 
-print("Total classes scraped:", len(df))
+df = df.drop_duplicates(subset=["crn"])
+
+print("\nTotal classes scraped:", len(df))
 
 df.to_csv("uic_fall2026_full_capacity.csv", index=False)
 
