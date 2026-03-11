@@ -1,59 +1,83 @@
-import pandas as pd
 import sqlite3
+import pandas as pd
 
-conn = sqlite3.connect("courses.db")
+DB = "courses.db"
+
+FALL_FILE = "uic_fall2026_full_capacity.csv"
+SPRING_FILE = "uic_spring2026_full_capacity.csv"
+
+FALL_TERM = "Fall 2026"
+SPRING_TERM = "Spring 2026"
+
+conn = sqlite3.connect(DB)
 cursor = conn.cursor()
 
-# Load both CSV files
-fall = pd.read_csv("uic_fall2026_full_capacity.csv")
-spring = pd.read_csv("uic_spring2026_full_capacity.csv")
+# -------------------------
+# Create table
+# -------------------------
 
-# Add term column
-fall["term"] = "fall"
-spring["term"] = "spring"
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS section_capacity (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    term TEXT,
+    crn INTEGER,
+    subject TEXT,
+    course_number TEXT,
+    title TEXT,
+    capacity INTEGER,
+    remaining_seats INTEGER,
+    enrolled INTEGER
+)
+""")
 
+conn.commit()
+
+print("Table ready")
+
+# -------------------------
+# Load Fall
+# -------------------------
+
+fall_df = pd.read_csv(FALL_FILE)
+fall_df["term"] = FALL_TERM
+
+# -------------------------
+# Load Spring
+# -------------------------
+
+spring_df = pd.read_csv(SPRING_FILE)
+spring_df["term"] = SPRING_TERM
+
+# -------------------------
 # Combine datasets
-df = pd.concat([fall, spring])
+# -------------------------
 
-for _, row in df.iterrows():
+df = pd.concat([fall_df, spring_df], ignore_index=True)
 
-    crn = int(row["crn"])
-    term = row["term"]
+df = df[[
+    "term",
+    "crn",
+    "subject",
+    "course_number",
+    "title",
+    "capacity",
+    "remaining_seats",
+    "enrolled"
+]]
 
-    # Handle NaN values safely
-    capacity = int(row["capacity"]) if pd.notna(row["capacity"]) else 0
-    remaining = int(row["remaining_seats"]) if pd.notna(row["remaining_seats"]) else 0
-    enrolled = int(row["enrolled"]) if pd.notna(row["enrolled"]) else 0
+# -------------------------
+# Insert into DB
+# -------------------------
 
-    # Find offering_id from offerings table
-    cursor.execute(
-        "SELECT offering_id FROM offerings WHERE crn=? AND term=?",
-        (crn, term)
-    )
-
-    result = cursor.fetchone()
-
-    # Skip if offering not found
-    if result is None:
-        continue
-
-    offering_id = result[0]
-
-    # Insert capacity data
-    cursor.execute("""
-        INSERT INTO section_capacity
-        (offering_id, crn, term, capacity, remaining_seats, enrolled)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        offering_id,
-        crn,
-        term,
-        capacity,
-        remaining,
-        enrolled
-    ))
+df.to_sql(
+    "section_capacity",
+    conn,
+    if_exists="append",
+    index=False
+)
 
 conn.commit()
 conn.close()
 
-print("Capacity data inserted successfully.")
+print("Inserted rows:", len(df))
+print("Done.")
