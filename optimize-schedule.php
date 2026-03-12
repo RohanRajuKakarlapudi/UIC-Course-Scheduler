@@ -8,6 +8,53 @@
 		}
     </style>
 	<?php
+	$db = new SQLite3("courses.db");
+
+	$student = $_POST["input_file"];   // input_1771129988.txt
+	$term = "Fall 2026";
+
+	if(isset($_POST["chosenClasses"])){
+
+	foreach($_POST["chosenClasses"] as $course){
+
+	$parts = explode(" ",$course);
+	$subject = $parts[0];
+	$courseNum = $parts[1];
+
+	$q = $db->prepare("
+	SELECT crn
+	FROM section_capacity
+	WHERE subject=:subject
+	AND course_number=:course
+	AND term=:term
+	LIMIT 1
+	");
+
+	$q->bindValue(":subject",$subject);
+	$q->bindValue(":course",$courseNum);
+	$q->bindValue(":term",$term);
+
+	$r = $q->execute();
+	$row = $r->fetchArray(SQLITE3_ASSOC);
+
+	$crn = $row["crn"];
+
+	$insert = $db->prepare("
+	INSERT INTO student_registrations
+	(student_id,term,crn,subject,course_number)
+	VALUES
+	(:student,:term,:crn,:subject,:course)
+	");
+
+	$insert->bindValue(":student",$student);
+	$insert->bindValue(":term",$term);
+	$insert->bindValue(":crn",$crn);
+	$insert->bindValue(":subject",$subject);
+	$insert->bindValue(":course",$courseNum);
+
+	$insert->execute();
+
+	}}
 	function debug_to_console($data) {
 		$output = $data;
 		if (is_array($output))

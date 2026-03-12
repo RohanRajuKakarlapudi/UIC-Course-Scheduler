@@ -45,6 +45,31 @@ index
       //var sessionID = 999999;// test purpose
       var divBoxSize = 1000;
     </script> -->
+
+      <script>
+        function fetchSeats(subject, course){
+
+        fetch("lookup_crn.php?subject="+subject+"&course="+course)
+        .then(res=>res.json())
+        .then(data=>{
+
+        let crn = data.crn;
+
+        fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
+        .then(res=>res.json())
+        .then(seat=>{
+
+        document.getElementById("remainingSeats").innerHTML =
+        "<b>"+seat.subject+" "+seat.course+"</b><br>" +
+        "Capacity: "+seat.capacity+"<br>" +
+        "Registered: "+seat.registered+"<br>" +
+        "Remaining: "+seat.remaining;
+
+        })
+
+        })
+        }
+      </script>
       <script>
         function show_image(src, width, height, alt) {
             var img = document.createElement("img");
@@ -231,8 +256,22 @@ index
               opt.value = courseName;
               opt.id = courseName;
               opt.name = courseName;
+              opt.selected = true;
 
               chosen.appendChild(opt);
+              // get subject + course
+              let parts = courseName.split(" ");
+              let subject = parts[0];
+              let course = parts[1];
+
+              // lookup CRN
+              fetch("lookup_crn.php?subject="+subject+"&course="+course)
+              .then(response => response.json())
+              .then(data => {
+
+              fetchSeats(data.crn,"Fall 2026");
+
+              });
             }
 
 
@@ -521,6 +560,27 @@ index
                   multiple="multiple" size="8"
                   style="font-size: 16px; width: 320px;">
           </select>
+
+          <br>
+
+          <label>Remaining Seats</label>
+
+          <div id="seatDisplay"
+          style="
+          border:1px dashed #333;
+          height:120px;
+          padding:10px;
+          overflow:auto;
+          background:#f8f8f8;
+          width:320px;
+          ">
+          Seat info will appear here
+          </div>
+          <!-- <div id="remainingSeats">
+          Seat info will appear here
+          </div> -->
+
+          <br>
             </div>
         <br>
         </p>
@@ -531,12 +591,75 @@ index
       </form>
       <p style="margin-left: 150px;">
       <script>
+
+        function fetchSeats(crn, term)
+        {
+
+        fetch("get_remaining_seats.php?crn="+crn+"&term="+term)
+
+        .then(response => response.json())
+
+        .then(data => {
+
+        let text =
+        "<b>" + data.subject + " " + data.course + "</b><br>" +
+        "Capacity: " + data.capacity + "<br>" +
+        "Registered: " + data.registered + "<br>" +
+        "Remaining: " + data.remaining + "<br><br>";
+
+        document.getElementById("seatDisplay").innerHTML = text;
+
+        });
+
+        }
+
         let execute = () => {
           $("#test").contents().find("#myTable").remove();
           document.getElementById("loadText").style = "display:none; margin-left: 50px"
         }
+
+
+      function previewSeats(){
+
+      document.getElementById("remainingSeats").innerHTML = "";
+
+      let box = document.getElementById("chosenClasses");
+
+      for(let i=0;i<box.options.length;i++){
+
+      let course = box.options[i].value;
+
+      let parts = course.split(" ");
+
+      let subject = parts[0];
+      let courseNum = parts[1];
+
+      fetch("lookup_crn.php?subject="+subject+"&course="+courseNum)
+      .then(res=>res.json())
+      .then(data=>{
+
+      let crn = data.crn;
+
+      fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
+      .then(res=>res.json())
+      .then(seat=>{
+
+      document.getElementById("remainingSeats").innerHTML +=
+      "<b>"+seat.subject+" "+seat.course+"</b><br>" +
+      "Capacity: "+seat.capacity+"<br>" +
+      "Registered: "+seat.registered+"<br>" +
+      "Remaining: "+seat.remaining+"<br><br>";
+
+      })
+
+      })
+
+      }
+
+      }
       </script>
       <input type="submit" name="submit" id="submit" onclick="execute()" value="Preview Classes"/>
+      <!-- <input type="button" id="previewBtn" onclick="previewSeats()" value="Preview Classes"/> -->
       <input type="reset" name="reset" value="Reset" id="reset"/>
 
     </div>
