@@ -47,28 +47,28 @@ index
     </script> -->
 
       <script>
-        function fetchSeats(subject, course){
+        // function fetchSeats(subject, course){
 
-        fetch("lookup_crn.php?subject="+subject+"&course="+course)
-        .then(res=>res.json())
-        .then(data=>{
+        // fetch("lookup_crn.php?subject="+subject+"&course="+course)
+        // .then(res=>res.json())
+        // .then(data=>{
 
-        let crn = data.crn;
+        // let crn = data.crn;
 
-        fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
-        .then(res=>res.json())
-        .then(seat=>{
+        // fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
+        // .then(res=>res.json())
+        // .then(seat=>{
 
-        document.getElementById("remainingSeats").innerHTML =
-        "<b>"+seat.subject+" "+seat.course+"</b><br>" +
-        "Capacity: "+seat.capacity+"<br>" +
-        "Registered: "+seat.registered+"<br>" +
-        "Remaining: "+seat.remaining;
+        // document.getElementById("remainingSeats").innerHTML =
+        // "<b>"+seat.subject+" "+seat.course+"</b><br>" +
+        // "Capacity: "+seat.capacity+"<br>" +
+        // "Registered: "+seat.registered+"<br>" +
+        // "Remaining: "+seat.remaining;
 
-        })
+        // })
 
-        })
-        }
+        // })
+        // }
       </script>
       <script>
         function show_image(src, width, height, alt) {
@@ -264,14 +264,24 @@ index
               let subject = parts[0];
               let course = parts[1];
 
-              // lookup CRN
-              fetch("lookup_crn.php?subject="+subject+"&course="+course)
-              .then(response => response.json())
-              .then(data => {
+              // // lookup CRN
+              // $(document).on('change', '#chosenClasses', function () {
+              //   let selected = $("#chosenClasses option:selected");
 
-              fetchSeats(data.crn,"Fall 2026");
+              //   if (!selected.length) return;
 
-              });
+              //   let courseName = selected.text().trim();
+
+              //   let parts = courseName.split(" ");
+              //   let subject = parts[0];
+              //   let course = parts[1];
+
+              //   fetch("lookup_crn.php?subject=" + subject + "&course=" + course)
+              //     .then(res => res.json())
+              //     .then(data => {
+              //       fetchSeats(data.crn, "Fall 2026");
+              //     });
+              // });
             }
 
 
@@ -751,6 +761,39 @@ index
       handles: "se",           // bottom right corner only
       minHeight: 120,
       minWidth: 200
+    });
+    $(document).on('change', '#chosenClasses', function () {
+
+      let selected = $("#chosenClasses option:selected");
+      if (!selected.length) return;
+
+      let courseName = selected.text().trim();
+
+      // SAFE SPLIT
+      let parts = courseName.trim().split(/\s+/);
+
+      let subject = parts[0];
+      let course = parts[1];
+
+      // 🔥 FORCE CLEAN COURSE NUMBER
+      course = course.replace(/[^0-9]/g, "");
+
+      console.log("DEBUG:", subject, course);
+
+      fetch("lookup_crn.php?subject=" + subject + "&course=" + course)
+        .then(res => res.json())
+        .then(data => {
+
+          console.log("CRN RESPONSE:", data);
+
+          if (!data || !data.crn) {
+            document.getElementById("seatDisplay").innerHTML =
+              "No seat data found for " + subject + " " + course;
+            return;
+          }
+
+          fetchSeats(data.crn, "Fall 2026");
+        });
     });
 
 
