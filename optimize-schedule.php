@@ -10,50 +10,59 @@
 	<?php
 	$db = new SQLite3("courses.db");
 
-	$student = $_POST["input_file"];   // input_1771129988.txt
+	$student_id = time() . "_" . bin2hex(random_bytes(8));
+	error_log("DEBUG student_id: " . $student_id);
+	error_log("DEBUG chosenClasses: " . print_r($_POST["chosenClasses"] ?? [], true));
 	$term = "Fall 2026";
 
 	if(isset($_POST["chosenClasses"])){
-
 	foreach($_POST["chosenClasses"] as $course){
+	$parts     = preg_split('/\s+/', trim($course));
+	$subject   = $parts[0];
+	$courseNum = preg_replace('/[^0-9]/', '', $parts[1]);
 
-	$parts = explode(" ",$course);
-	$subject = $parts[0];
-	$courseNum = $parts[1];
-
+	// get CRN
 	$q = $db->prepare("
-	SELECT crn
-	FROM section_capacity
+	SELECT crn FROM section_capacity
 	WHERE subject=:subject
 	AND course_number=:course
 	AND term=:term
-	LIMIT 1
+	ORDER BY capacity DESC LIMIT 1
 	");
-
 	$q->bindValue(":subject",$subject);
 	$q->bindValue(":course",$courseNum);
 	$q->bindValue(":term",$term);
-
 	$r = $q->execute();
 	$row = $r->fetchArray(SQLITE3_ASSOC);
+	$crn = $row["crn"] ?? null;
 
-	$crn = $row["crn"];
-
+	// insert into student_registrations
 	$insert = $db->prepare("
 	INSERT INTO student_registrations
 	(student_id,term,crn,subject,course_number)
-	VALUES
-	(:student,:term,:crn,:subject,:course)
+	VALUES (:student,:term,:crn,:subject,:course)
 	");
-
-	$insert->bindValue(":student",$student);
+	$insert->bindValue(":student",$student_id);
 	$insert->bindValue(":term",$term);
 	$insert->bindValue(":crn",$crn);
 	$insert->bindValue(":subject",$subject);
 	$insert->bindValue(":course",$courseNum);
-
 	$insert->execute();
 
+	// insert into seat_tracking — delta -1 = seat taken
+	if($crn){
+	$ins2 = $db->prepare("
+	INSERT INTO seat_tracking
+	(crn,term,subject,course_number,student_id,delta,action)
+	VALUES (:crn,:term,:subject,:course,:student,-1,'add')
+	");
+	$ins2->bindValue(":crn",$crn);
+	$ins2->bindValue(":term",$term);
+	$ins2->bindValue(":subject",$subject);
+	$ins2->bindValue(":course",$courseNum);
+	$ins2->bindValue(":student",$student_id);
+	$ins2->execute();
+	}
 	}}
 	function debug_to_console($data) {
 		$output = $data;

@@ -55,7 +55,7 @@ index
 
         // let crn = data.crn;
 
-        // fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
+        // fetch("get_seats_live.php?crn="+crn+"&term=Fall 2026")
         // .then(res=>res.json())
         // .then(seat=>{
 
@@ -608,7 +608,7 @@ index
         function fetchSeats(crn, term)
         {
 
-        fetch("get_remaining_seats.php?crn="+crn+"&term="+term)
+        fetch("get_seats_live.php?crn="+crn+"&term="+term)
 
         .then(response => response.json())
 
@@ -653,7 +653,7 @@ index
 
       let crn = data.crn;
 
-      fetch("get_remaining_seats.php?crn="+crn+"&term=Fall 2026")
+      fetch("get_seats_live.php?crn="+crn+"&term=Fall 2026")
       .then(res=>res.json())
       .then(seat=>{
 
