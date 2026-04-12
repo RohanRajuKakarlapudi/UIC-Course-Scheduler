@@ -237,6 +237,7 @@ index
               const courseOpt = $("#Courses option:selected");
               const courseId = $("#Courses").val();
               const courseName = (courseOpt.attr("name") || courseOpt.text() || "").trim();
+              const credits = ($("#CreditHours").val() || "").trim();
 
               if (!courseId) {
                 alert("Please select a course.");
@@ -245,17 +246,19 @@ index
 
               const chosen = document.getElementById("chosenClasses");
 
-              // prevent duplicates
+              // prevent duplicates — compare by value (clean course name), not display text
               for (let i = 0; i < chosen.options.length; i++) {
-                const existing = chosen.options[i].textContent.trim();
-                if (existing === courseName) return;
+                if (chosen.options[i].value === courseName) return;
               }
 
+              const displayText = courseName + " (" + credits + " cr)";
+
               const opt = document.createElement("option");
-              opt.textContent = courseName;
-              opt.value = courseName;
+              opt.textContent = displayText;   // shows "ACTG 596 (3.0 cr)" in the box
+              opt.value = courseName;          // stays "ACTG 596" — input file unchanged
               opt.id = courseName;
               opt.name = courseName;
+              opt.setAttribute("data-credits", credits);
               opt.selected = true;
 
               chosen.appendChild(opt);
